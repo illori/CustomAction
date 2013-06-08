@@ -1,0 +1,918 @@
+<?xml version="1.0"?>
+<!DOCTYPE modification SYSTEM "http://www.simplemachines.org/xml/modification">
+<modification xmlns="http://www.simplemachines.org/xml/modification" xmlns:smf="http://www.simplemachines.org/">
+	<id>winrules:CustomAction</id>
+	<version>3.2</version>
+	<file name="$sourcedir/ManageSettings.php">
+		<operation>
+			<search position="replace"><![CDATA[
+		'sig' => 'ModifySignatureSettings',
+]]></search>
+			<add><![CDATA[
+		'sig' => 'ModifySignatureSettings',
+		'action' => 'CustomActionList',
+		'actionedit' => 'CustomActionEdit',
+]]></add>
+		</operation>
+
+		<operation>
+			<search position="replace"><![CDATA[
+		),
+	);
+
+	// Call the right function for this sub-acton.
+]]></search>
+			<add><![CDATA[
+			'action' => array(
+				'label' => $txt['custom_action_title'],
+				'description' => $txt['custom_action_desc'],
+			),
+		),
+	);
+
+	// Call the right function for this sub-acton.
+]]></add>
+		</operation>
+
+		<operation>
+			<search position="end"></search>
+			<add><![CDATA[
+function CustomActionList()
+{
+	global $context, $txt, $sourcedir, $scripturl, $db_prefix, $smcFunc;
+
+	$context['page_title'] = $txt['custom_action_title'];
+	$context['sub_template'] = 'show_custom_action';
+
+	// Are we listing sub-actions?
+	if (!empty($_REQUEST['id_action']))
+	{
+		$id_action = (int) $_REQUEST['id_action'];
+
+		$request = $smcFunc['db_query']('', '
+			SELECT name, url
+			FROM {db_prefix}custom_actions
+			WHERE id_action = {int:id_action}',
+			array(
+				'id_action' => $id_action,
+			)
+		);
+
+		// Found the parent action?
+		if ($smcFunc['db_num_rows']($request) != 0)
+		{
+			list ($parent_name, $parent_url) = $smcFunc['db_fetch_row']($request);
+			$parent = $id_action;
+		}
+		else
+			$parent = 0;
+
+		$smcFunc['db_free_result']($request);
+	}
+	else
+		$parent = 0;
+
+	// Load up our list.
+	require_once($sourcedir . '/Subs-List.php');
+
+	$listOptions = array(
+		'id' => 'custom_actions',
+		'title' => $parent ? sprintf($txt['custom_action_title_sub'], $parent_name) : $txt['custom_action_title'],
+		'base_href' => $scripturl . '?action=admin;area=featuresettings;sa=action' . ($parent ? ';action=' . $parent : ''),
+		'default_sort_col' => 'action_name',
+		'no_items_label' => $parent ? sprintf($txt['custom_action_none_sub'], $parent_name) :$txt['custom_action_none'],
+		'items_per_page' => 25,
+		'get_items' => array(
+			'function' => 'list_getCustomActions',
+			'params' => array(
+				$parent,
+			),
+		),
+		'get_count' => array(
+			'function' => 'list_getCustomActionSize',
+			'params' => array(
+				$parent,
+			),
+		),
+		'columns' => array(
+			'action_name' => array(
+				'header' => array(
+					'value' => $txt['custom_action_name'],
+					'style' => 'text-align: left;',
+				),
+				'data' => array(
+					'function' => create_function('$rowData', '
+						global $scripturl;
+
+						return $rowData[\'enabled\'] ? \'<a href="\' . $scripturl  . \'?action=' . ($parent ? $parent_url . ';sa=' : '') . '\' . $rowData[\'url\'] . \'">\' . $rowData[\'name\'] . \'</a>\' : $rowData[\'name\'];'),
+					// Limit the width if we have the sub-action column.
+					'style' => 'width: ' . ($parent ? '62%' : '50%') . ';',
+				),
+				'sort' => array(
+					'default' => 'ca.name',
+					'reverse' => 'ca.name DESC',
+				),
+			),
+			'action_type' => array(
+				'header' => array(
+					'value' => $txt['custom_action_type'],
+					'style' => 'text-align: left;',
+				),
+				'data' => array(
+					'function' => create_function('$rowData', '
+						global $txt;
+
+						return isset($txt[\'custom_action_type_\' . $rowData[\'action_type\']]) ? $txt[\'custom_action_type_\' . $rowData[\'action_type\']] : $rowData[\'action_type\'];'),
+					'style' => 'width: 15%;',
+				),
+				'sort' => array(
+					'default' => 'ca.action_type',
+					'reverse' => 'ca.action_type DESC',
+				),
+			),
+			'sub_actions' => array(
+				'header' => array(
+					'value' => $txt['custom_action_sub_actions'],
+				),
+				'data' => array(
+					'function' => create_function('$rowData', '
+						global $scripturl;
+
+						return \'<a href="\' . $scripturl . \'?action=admin;area=featuresettings;sa=action;id_action=\' . $rowData[\'id_action\'] . \'">\' . $rowData[\'sub_actions\'] . \'</a>\';'),
+					'style' => 'width: 12%; text-align: center;',
+				),
+				'sort' => array(
+					'default' => 'COUNT(sa.id_action)',
+					'reverse' => 'COUNT(sa.id_action) DESC',
+				),
+			),
+			'enabled' => array(
+				'header' => array(
+					'value' => $txt['custom_action_enabled'],
+				),
+				'data' => array(
+					'function' => create_function('$rowData', '
+						global $txt;
+
+						return $rowData[\'enabled\'] ? $txt[\'yes\'] : $txt[\'no\'];'),
+					'class' => 'windowbg',
+					'style' => 'width: 8%; text-align: center;',
+				),
+				'sort' => array(
+					'default' => 'ca.enabled DESC',
+					'reverse' => 'ca.enabled',
+				),
+			),
+			'modify' => array(
+				'header' => array(
+					'value' => $txt['modify'],
+				),
+				'data' => array(
+					'sprintf' => array(
+						'format' => '<a href="' . $scripturl . '?action=admin;area=featuresettings;sa=actionedit;id_action=%1$s">' . $txt['modify'] . '</a>',
+						'params' => array(
+							'id_action' => false,
+						),
+					),
+					'class' => 'windowbg',
+					'style' => 'width: 15%; text-align: center;',
+				),
+			),
+		),
+		'additional_rows' => array(
+			array(
+				'position' => 'below_table_data',
+				'value' => '[<a href="' . $scripturl . '?action=admin;area=featuresettings;sa=actionedit' . ($parent ? ';id_parent=' . $parent : '') . '">' . $txt['custom_action_make_new' . ($parent ? '_sub' : '')] . '</a>]',
+				'class' => 'titlebg',
+			),
+		),
+	);
+
+	// Will we be needing the sub-action column?
+	if ($parent)
+		unset($listOptions['columns']['sub_actions']);
+
+	createList($listOptions);
+}
+
+function list_getCustomActions($start, $items_per_page, $sort, $parent)
+{
+	global $smcFunc, $db_prefix;
+
+	$list = array();
+
+	// Load all the actions.
+	if ($parent)
+		$request = $smcFunc['db_query']('', '
+			SELECT ca.id_action, ca.name, ca.url, ca.action_type, ca.enabled
+			FROM {db_prefix}custom_actions AS ca
+			WHERE ca.id_parent = {int:id_parent}
+			ORDER BY ' . $sort . '
+			LIMIT ' . $start . ', ' . $items_per_page,
+			array(
+				'id_parent' => $parent,
+			)
+		);
+	else
+		$request = $smcFunc['db_query']('', '
+			SELECT ca.id_action, ca.name, ca.url, ca.action_type, COUNT(sa.id_action) AS sub_actions, ca.enabled
+			FROM {db_prefix}custom_actions AS ca
+				LEFT JOIN {db_prefix}custom_actions AS sa ON (ca.id_action = sa.id_parent)
+			WHERE ca.id_parent = 0
+			GROUP BY ca.id_action, ca.name, ca.url, ca.action_type, ca.enabled
+			ORDER BY ' . $sort . '
+			LIMIT ' . $start . ', ' . $items_per_page,
+			array(
+			)
+		);
+	while ($row = $smcFunc['db_fetch_assoc']($request))
+		$list[] = $row;
+	$smcFunc['db_free_result']($request);
+
+	return $list;
+}
+
+function list_getCustomActionSize($parent)
+{
+	global $smcFunc, $db_prefix;
+
+	$request = $smcFunc['db_query']('', '
+		SELECT COUNT(*)
+		FROM {db_prefix}custom_actions
+		WHERE id_parent = {int:id_parent}',
+		array(
+			'id_parent' => $parent,
+		)
+	);
+
+	list ($numCustomActions) = $smcFunc['db_fetch_row']($request);
+	$smcFunc['db_free_result']($request);
+
+	return $numCustomActions;
+}
+
+function CustomActionEdit()
+{
+	global $context, $txt, $smcFunc, $db_prefix, $sourcedir;
+
+	$context['id_action'] = isset($_REQUEST['id_action']) ? (int)$_REQUEST['id_action'] : 0;
+	$context['id_parent'] = isset($_REQUEST['id_parent']) ? (int)$_REQUEST['id_parent'] : 0;
+	$context[$context['admin_menu_name']]['current_subsection'] = 'action';
+	$context['page_title'] = $txt['custom_action_title'];
+	$context['sub_template'] = 'edit_custom_action';
+
+	// Needed for inline permissions.
+	require_once($sourcedir . '/ManagePermissions.php');
+	// Needed for BBC actions.
+	require_once($sourcedir . '/Subs-Post.php');
+
+	// Saving?
+	if (isset($_REQUEST['save']))
+	{
+		checkSession();
+
+		if (!empty($context['id_action']))
+		{
+			// Is this action a child?
+			$request = $smcFunc['db_query']('', '
+				SELECT id_parent
+				FROM {db_prefix}custom_actions
+				WHERE id_action = {int:id_action}',
+				array(
+					'id_action' => $context['id_action'],
+				)
+			);
+
+			if ($smcFunc['db_num_rows']($request) == 0)
+				fatal_lang_error('custom_action_not_found', false);
+
+			list ($context['id_parent']) = $smcFunc['db_fetch_row']($request);
+
+			$smcFunc['db_free_result']($request);
+		}
+
+		// Do we have a valid name?
+		$url = strtolower($_POST['url']);
+		if (preg_match('~[^a-z0-9_]~', $url))
+			fatal_lang_error('custom_action_invalid_url', false);
+
+		// Inline permissions?
+		if ($_POST['permissions_mode'] == 1)
+		{
+			save_inline_permissions(array('ca_' . (!empty($context['id_action']) ? $context['id_action'] : 'temp')));
+			$permissions_mode = 1;
+		}
+		else if ($context['id_parent'] && $_POST['permissions_mode'] == 2)
+			$permissions_mode = 2;
+		else
+			$permissions_mode = 0;
+
+		// Is the field enabled?
+		$enabled = !empty($_POST['enabled']) ? 1 : 0;
+
+		// What about the type?
+		if (in_array($_POST['type'], array(0, 1, 2)))
+			$type = $_POST['type'];
+		else
+			$type = 0;
+
+		// A menu button?
+		$menu = !empty($_POST['menu']) && !$context['id_parent'] ? 1 : 0;
+
+		// Clean the body and headers.
+		$header = $_POST['header'];
+		if ($type == 1)
+		{
+			$body = !empty($_POST['body']) ? $_POST['body'] : '';
+			$body = $smcFunc['htmlspecialchars']($body);
+			preparsecode($body);
+
+			// No headers for us!
+			$header = '';
+		}
+		else
+			$body = $_POST['body'];
+
+		$name = $_POST['name'];
+
+		// Update the database.
+		if (!empty($context['id_action']))
+			$smcFunc['db_query']('', '
+				UPDATE {db_prefix}custom_actions
+				SET name = {string:name}, url = {string:url}, enabled = {int:enabled}, permissions_mode = {int:permissions_mode},
+					action_type = {int:action_type}, menu = {int:menu}, header = {string:header}, body = {string:body}
+				WHERE id_action = {int:id_action}',
+				array(
+					'id_action' => $context['id_action'],
+					'name' => $name,
+					'url' => $url,
+					'enabled' => $enabled,
+					'permissions_mode' => $permissions_mode,
+					'action_type' => $type,
+					'menu' => $menu,
+					'header' => $header,
+					'body' => $body,
+				)
+			);
+		// A new action.
+		else
+		{
+			// Insert the data.
+			$smcFunc['db_insert']('',
+				'{db_prefix}custom_actions',
+				array(
+					'id_parent' => 'int', 'name' => 'string', 'url' => 'string', 'enabled' => 'int',
+					'permissions_mode' => 'int', 'action_type' => 'int', 'menu' => 'int', 'header' => 'string', 'body' => 'string',
+				),
+				array(
+					$context['id_parent'], $name, $url, $enabled,
+					$permissions_mode, $type, $menu, $header, $body,
+				),
+				array('id_action')
+			);
+
+			$context['id_action'] = $smcFunc['db_insert_id']('{db_prefix}custom_actions', 'id_action');
+
+			// Update our temporary permissions.
+			if ($permissions_mode == 1)
+			{
+				// There's a small posibillity that there may already be some permissions with the same name.
+				$smcFunc['db_query']('', '
+					DELETE FROM {db_prefix}permissions
+					WHERE permission = {string:permission}',
+					array(
+						'permission' => 'ca_' . $context['id_action'],
+					)
+				);
+
+				$smcFunc['db_query']('', '
+					UPDATE {db_prefix}permissions
+					SET permission = {string:permission}
+					WHERE permission = {string:temporary_permission}',
+					array(
+						'permission' => 'ca_' . $context['id_action'],
+						'temporary_permission' => 'ca_temp',
+					)
+				);
+			}
+		}
+
+		// Recache.
+		recacheCustomActions();
+
+		redirectexit('action=admin;area=custom_action;sa=action' . ($context['id_parent'] ? ';id_action=' . $context['id_parent'] : ''));
+	}
+	// Deleting?
+	elseif (isset($_REQUEST['delete']))
+	{
+		checkSession();
+
+		// Before we do anything we need to know what to redirect to when we're done.
+		$request = $smcFunc['db_query']('', '
+			SELECT id_parent
+			FROM {db_prefix}custom_actions
+			WHERE id_action = {int:id_action}',
+			array(
+				'id_action' => $context['id_action'],
+			)
+		);
+
+		if ($smcFunc['db_num_rows']($request) == 0)
+			fatal_lang_error('custom_action_not_found', false);
+
+		list ($context['id_parent']) = $smcFunc['db_fetch_row']($request);
+
+		$smcFunc['db_free_result']($request);
+
+		$to_delete = array($context['id_action']);
+		// Does this action have any children we need to kill, too?
+		$request = $smcFunc['db_query']('', '
+			SELECT id_action
+			FROM {db_prefix}custom_actions
+			WHERE id_parent = {int:id_parent}',
+			array(
+				'id_parent' => $context['id_action'],
+			)
+		);
+
+		while ($row = $smcFunc['db_fetch_assoc']($request))
+			$to_delete[] = $row['id_action'];
+		$smcFunc['db_free_result']($request);
+
+		// First take the actions.
+		$smcFunc['db_query']('', '
+			DELETE FROM {db_prefix}custom_actions
+			WHERE id_action IN ({array_int:to_delete})',
+			array(
+				'to_delete' => $to_delete,
+			)
+		);
+
+		// Now get rid of those extra permissions.
+		foreach ($to_delete as $key => $value)
+			$to_delete[$key] = 'ca_' . $value;
+		$smcFunc['db_query']('', '
+			DELETE FROM {db_prefix}permissions
+			WHERE permission IN ({array_string:to_delete})',
+			array(
+				'to_delete' => $to_delete,
+			)
+		);
+
+		// We'll need to recache.
+		recacheCustomActions();
+
+		redirectexit('action=admin;area=custom_action;sa=action' . ($context['id_parent'] ? ';id_action=' . $context['id_parent'] : ''));
+	}
+	// Are we editing or creating a new action?
+	elseif (!empty($context['id_action']))
+	{
+		$request = $smcFunc['db_query']('', '
+			SELECT id_parent, name, url, enabled, permissions_mode, action_type, menu, header, body
+			FROM {db_prefix}custom_actions
+			WHERE id_action = {int:id_action}',
+			array(
+				'id_action' => $context['id_action'],
+			)
+		);
+
+		if ($smcFunc['db_num_rows']($request) == 0)
+			fatal_lang_error('custom_action_not_found', false);
+
+		$row = $smcFunc['db_fetch_assoc']($request);
+
+		$smcFunc['db_free_result']($request);
+
+		$context['id_parent'] = $row['id_parent'];
+
+		$context['action'] = array(
+			'name' => $row['name'],
+			'url' => $row['url'],
+			'enabled' => $row['enabled'],
+			'permissions_mode' => $row['permissions_mode'],
+			'type' => $row['action_type'],
+			'menu' => $row['menu'],
+			'header' => $row['header'],
+			'body' => $row['body'],
+		);
+
+		// BBC?
+		if ($context['action']['type'] == 1)
+			$context['action']['body'] = un_preparsecode($context['action']['body']);
+
+		init_inline_permissions(array('ca_' . $context['id_action']));
+	}
+	else
+	{
+		// Set up the default options.
+		$context['action'] = array(
+			'name' => '',
+			'url' => '',
+			'enabled' => 1,
+			'permissions_mode' => 0,
+			'type' => 0,
+			'menu' => 0,
+			'header' => '',
+			'body' => '',
+		);
+
+		// We'll have to rename these later when we knoe what the action ID will be.
+		init_inline_permissions(array('ca_temp'));
+	}
+}
+
+function recacheCustomActions()
+{
+	global $smcFunc, $db_prefix, $context, $user_info;
+
+	// Get all the action names.
+	$request = $smcFunc['db_query']('', '
+		SELECT id_action, name, url, permissions_mode, menu
+		FROM {db_prefix}custom_actions
+		WHERE id_parent = 0
+			AND enabled = 1',
+		array(
+		)
+	);
+
+	$cache = array();
+	$menu_cache = array();
+	while ($row = $smcFunc['db_fetch_assoc']($request))
+	{
+		$cache[] = $row['url'];
+
+		// On the menu?
+		if ($row['menu'])
+			$menu_cache[] = array(
+				0 => $row['url'],
+				1 => $row['name'],
+				2 => $row['permissions_mode'] == 1 ? 'ca_' . $row['id_action'] : false,
+			);
+	}
+
+	$smcFunc['db_free_result']($request);
+
+	updateSettings(array(
+		'ca_cache' => implode(';', $cache),
+		'ca_menu_cache' => serialize($menu_cache),
+	), true);
+
+	// Try to at least clear the cache for them.
+	cache_put_data('menu_buttons-' . implode('_', $user_info['groups']) . '-' . $user_info['language'], null);
+}
+]]></add>
+		</operation>
+
+	</file>
+
+
+	<file name="$sourcedir/Admin.php">
+
+  	<operation>
+			<search position="after"><![CDATA['profile' => array($txt['custom_profile_shorttitle'], 'enabled' => in_array('cp', $context['admin_features'])),]]></search>
+			<add><![CDATA['action' => array($txt['custom_action_shorttitle'], 'admin_forum'),
+						]]></add>
+		</operation>
+
+	</file>
+
+	<file name="$languagedir/Modifications.english.php">
+
+		<operation>
+			<search position="end"></search>
+			<add><![CDATA[
+$txt['custom_action_shorttitle'] = 'Custom Actions';
+$txt['core_settings_item_ca'] = 'Custom Actions';
+$txt['core_settings_item_ca_desc'] = 'With custom actions you can create custom pages wrapped in your forum\'s theme.';
+$txt['custom_action_desc'] = 'From this page you can create and modify your own custom pages.';
+$txt['custom_action_title'] = 'Custom Actions';
+$txt['custom_action_title_sub'] = 'Sub-Actions For "%1$s"';
+$txt['custom_action_none'] = 'You have not created any custom actions yet!';
+$txt['custom_action_none_sub'] = 'You have not created any sub-actions for the "%1$s" action yet!';
+$txt['custom_action_name'] = 'Action Name';
+$txt['custom_action_type'] = 'Type';
+$txt['custom_action_type_0'] = 'HTML';
+$txt['custom_action_type_1'] = 'BBC';
+$txt['custom_action_type_2'] = 'PHP';
+$txt['custom_action_sub_actions'] = 'Sub-Actions';
+$txt['custom_action_enabled'] = 'Enabled';
+$txt['custom_action_make_new'] = 'New Action';
+$txt['custom_action_make_new_sub'] = 'New Sub-Action';
+$txt['custom_action_not_found'] = 'The requested action was not found.';
+$txt['custom_action_invalid_url'] = 'Action URLs may only contain letters, numbers and underscores.';
+$txt['custom_action_settings'] = 'Action Settings:';
+$txt['custom_action_url_desc'] = 'This may only contain letters, numbers and underscores.';
+$txt['custom_action_permissions_mode'] = 'Permissions Mode';
+$txt['custom_action_permissions_mode_0'] = 'Visible To Everyone';
+$txt['custom_action_permissions_mode_1'] = 'Visible To Selected Groups';
+$txt['custom_action_permissions_mode_2'] = 'Same As Parent Action';
+$txt['custom_action_body'] = 'Body';
+$txt['custom_action_body_html'] = 'HTML Body';
+$txt['custom_action_body_php'] = 'Template Code';
+$txt['custom_action_delete_sure'] = 'Are you sure you want to delete this action?';
+$txt['custom_action_header'] = 'HTML Headers';
+$txt['custom_action_source'] = 'Source File Code';
+$txt['custom_action_source_desc'] = 'This code will be evaluated before any templates are displayed. If you don\'t understand this you should just put all your code in the template code box. No output should be displayed here.';
+$txt['custom_action_header_desc'] = 'This code will be displayed in the header section.';
+$txt['custom_action_body_html_desc'] = 'This code will be displayed in the body section.';
+$txt['custom_action_body_php_desc'] = 'You should display all output here.';
+$txt['custom_action_body_desc'] = 'This is the body of your custom page.';
+$txt['custom_action_url'] = 'Action URL';
+$txt['custom_action_settings_code'] = 'Action Code:';
+$txt['custom_action_menu'] = 'Show Menu Button';
+]]></add>
+		</operation>
+
+	</file>
+<file name="$languagedir/Modifications.german.php" error="skip">
+
+		<operation>
+			<search position="end"></search>
+			<add><![CDATA[
+$txt['custom_action_shorttitle'] = 'Custom Actions';
+$txt['core_settings_item_ca'] = 'Custom Actions';
+$txt['core_settings_item_ca_desc'] = 'Mit Custom Actions kannst du Custom Pages erzeugen die eingebunden in deim Theme angezeigt werden.';
+$txt['custom_action_desc'] = 'Auf dieser Seite kannst du deine Custom Pages erstellen und editieren.';
+$txt['custom_action_title'] = 'Custom Actions';
+$txt['custom_action_title_sub'] = 'Sub-Actions f&uuml;r "%1$s"';
+$txt['custom_action_none'] = 'Zur Zeit sind keine Custom Actions vorhanden!';
+$txt['custom_action_none_sub'] = 'Zur Zeit sind keine Sub-Actions f&uuml;r die "%1$s" Action vorhanden!';
+$txt['custom_action_name'] = 'Action Name';
+$txt['custom_action_type'] = 'Typ';
+$txt['custom_action_type_0'] = 'HTML';
+$txt['custom_action_type_1'] = 'BBC';
+$txt['custom_action_type_2'] = 'PHP';
+$txt['custom_action_sub_actions'] = 'Sub-Actions';
+$txt['custom_action_enabled'] = 'Aktiviert';
+$txt['custom_action_make_new'] = 'Neue Action';
+$txt['custom_action_make_new_sub'] = 'Neue Sub-Action';
+$txt['custom_action_not_found'] = 'Die angeforderte Action ist nicht vorhanden.';
+$txt['custom_action_invalid_url'] = 'Action URLs d&uuml;rfen nur Buchstaben, Nummern und Unterstriche enthalten.';
+$txt['custom_action_settings'] = 'Action Einstellungen:';
+$txt['custom_action_url_desc'] = 'Dies darf nur Buchstaben, Nummern und Unterstriche enthalten.';
+$txt['custom_action_permissions_mode'] = 'Permissions Mode';
+$txt['custom_action_permissions_mode_0'] = 'Sichtbar f&uuml;r jeden';
+$txt['custom_action_permissions_mode_1'] = 'Sichtbar f&uuml;r die gew&auml;hlten Gruppen';
+$txt['custom_action_permissions_mode_2'] = 'Gleiche wie die &uuml;bergeordnete Action';
+$txt['custom_action_body'] = 'Body';
+$txt['custom_action_body_html'] = 'HTML Body';
+$txt['custom_action_body_php'] = 'Template Code';
+$txt['custom_action_delete_sure'] = 'Sind sie sicher diese Action zu l&ouml;schen?';
+$txt['custom_action_header'] = 'HTML Headers';
+$txt['custom_action_source'] = 'Quelldatei Code';
+$txt['custom_action_source_desc'] = 'Dieser Code wird vor dem Anzeigen des Template ausgewertet. Solltest du das nicht verstehen, verwende nur die Template Code Box. Hier soll kein Anzeigecode vorhanden sein.';
+$txt['custom_action_header_desc'] = 'Dieser Code wird in der Kopfzeile angezeigt.';
+$txt['custom_action_body_html_desc'] = 'Dieser Code wird im Body angezeigt..';
+$txt['custom_action_body_php_desc'] = 'Du solltest die gesammte Ausgabe hier sehen.';
+$txt['custom_action_body_desc'] = 'Dies ist der Body f&uuml;r deine Custom Page.';
+$txt['custom_action_url'] = 'Action URL';
+$txt['custom_action_settings_code'] = 'Action Code:';
+$txt['custom_action_menu'] = 'Zeige Men&uuml;button';
+]]></add>
+		</operation>
+
+	</file>
+
+	<file name="$languagedir/Modifications.german-utf8.php" error="skip">
+
+		<operation>
+			<search position="end"></search>
+			<add><![CDATA[
+$txt['custom_action_shorttitle'] = 'Custom Actions';	
+$txt['core_settings_item_ca'] = 'Custom Actions';
+$txt['core_settings_item_ca_desc'] = 'Mit Custom Actions kannst du Custom Pages erzeugen die eingebunden in deim Theme angezeigt werden.';
+$txt['custom_action_desc'] = 'Auf dieser Seite kannst du deine Custom Pages erstellen und editieren.';
+$txt['custom_action_title'] = 'Custom Actions';
+$txt['custom_action_title_sub'] = 'Sub-Actions für "%1$s"';
+$txt['custom_action_none'] = 'Zur Zeit sind keine Custom Actions vorhanden!';
+$txt['custom_action_none_sub'] = 'Zur Zeit sind keine Sub-Actions für die "%1$s" Action vorhanden!';
+$txt['custom_action_name'] = 'Action Name';
+$txt['custom_action_type'] = 'Typ';
+$txt['custom_action_type_0'] = 'HTML';
+$txt['custom_action_type_1'] = 'BBC';
+$txt['custom_action_type_2'] = 'PHP';
+$txt['custom_action_sub_actions'] = 'Sub-Actions';
+$txt['custom_action_enabled'] = 'aktiviert';
+$txt['custom_action_make_new'] = 'Neue Action';
+$txt['custom_action_make_new_sub'] = 'Neue Sub-Action';
+$txt['custom_action_not_found'] = 'Die angeforderte Action ist nicht vorhanden.';
+$txt['custom_action_invalid_url'] = 'Action URLs dürfen nur Buchstaben, Nummern und Unterstriche enthalten.';
+$txt['custom_action_settings'] = 'Action Einstellungen:';
+$txt['custom_action_url_desc'] = 'Dies darf nur Buchstaben, Nummern und Unterstriche enthalten.';
+$txt['custom_action_permissions_mode'] = 'Permissions Mode';
+$txt['custom_action_permissions_mode_0'] = 'Sichtbar für jeden';
+$txt['custom_action_permissions_mode_1'] = 'Sichtbar für die gewählten Gruppen';
+$txt['custom_action_permissions_mode_2'] = 'Gleiche wie die Eltern Action';
+$txt['custom_action_body'] = 'Body';
+$txt['custom_action_body_html'] = 'HTML Body';
+$txt['custom_action_body_php'] = 'Template Code';
+$txt['custom_action_delete_sure'] = 'Sind sie sicher diese Action zu löschen?';
+$txt['custom_action_header'] = 'HTML Headers';
+$txt['custom_action_source'] = 'Quelldatei Code';
+$txt['custom_action_source_desc'] = 'Dieser Code wird vor dem Anzeigen des Template ausgewertet. Solltest du das nicht verstehen, verwende nur die Template Code Box. Hier soll kein Anzeigecode vorhanden sein.';
+$txt['custom_action_header_desc'] = 'Dieser Code wird in der Kopfzeile angezeigt.';
+$txt['custom_action_body_html_desc'] = 'Dieser Code wird im Body angezeigt..';
+$txt['custom_action_body_php_desc'] = 'Du solltest die gesammte Ausgabe hier sehen.';
+$txt['custom_action_body_desc'] = 'Dies ist der Body für deine Custom Page.';
+$txt['custom_action_url'] = 'Action URL';
+$txt['custom_action_settings_code'] = 'Action Code:';
+$txt['custom_action_menu'] = 'Zeige Menübutton';
+]]></add>
+		</operation>
+
+	</file>
+	
+	<file name="$sourcedir/Subs.php">
+
+		<operation>
+			<search position="replace"><![CDATA[		// Now we put the buttons in the context so the theme can use them.
+]]></search>
+			<add><![CDATA[
+		// Any custom action buttons?
+		$ca_buttons = unserialize($modSettings['ca_menu_cache']);
+		foreach ($ca_buttons as $button)
+		{
+			$buttons[$button[0]] = array(
+				'title' => $button[1],
+				'href' => $scripturl . '?action=' . $button[0],
+				'show' => $button[2] ? allowedTo($button[2]) : true,
+				'sub_buttons' => array(
+				),
+				'is_last' => true,
+			);
+		}
+
+		// Now we put the buttons in the context so the theme can use them.
+]]></add>
+		</operation>
+
+	</file>
+
+	<file name="$boarddir/index.php">
+
+		<operation>
+			<search position="replace"><![CDATA[
+	// Get the function and file to include - if it's not there, do the board index.
+]]></search>
+			<add><![CDATA[
+	// Add custom actions to the array.
+	$custom_actions = explode(';', $modSettings['ca_cache']);
+	foreach ($custom_actions as $custom_action)
+		$actionArray[$custom_action] = array('CustomAction.php', 'ViewCustomAction');
+
+	// Get the function and file to include - if it's not there, do the board index.
+]]></add>
+		</operation>
+
+	</file>
+
+	<file name="$themedir/Admin.template.php">
+
+		<operation>
+			<search position="end"></search>
+			<add><![CDATA[
+function template_show_custom_action()
+{
+	template_show_list('custom_actions');
+}
+
+function template_edit_custom_action()
+{
+	global $context, $txt, $scripturl;
+
+	echo '
+	<script language="JavaScript" type="text/javascript"><!-- // --><![CDATA[
+		function updateInputBoxes()
+		{
+			permission_mode = document.getElementById("permissions_mode").value;
+			type = document.getElementById("type").value;
+
+			document.getElementById("inline_permissions").style.display = permission_mode == 1 ? "" : "none";
+			document.getElementById("header_box").style.display = type != 1 ? "" : "none";
+			document.getElementById("header_text").style.display = type == 0 ? "" : "none";
+			document.getElementById("source_text").style.display = type == 2 ? "" : "none";
+			document.getElementById("html_body_text").style.display = type == 0 ? "" : "none";
+			document.getElementById("body_text").style.display = type == 1 ? "" : "none";
+			document.getElementById("php_body_text").style.display = type == 2 ? "" : "none";
+		}
+	// ]', ']></script>';
+
+	echo '
+	<form action="', $scripturl, '?action=admin;area=featuresettings;sa=actionedit', $context['id_action'] ? ';id_action=' . $context['id_action'] : '', '" method="post" accept-charset="', $context['character_set'], '">
+		<table width="80%" align="center" cellpadding="3" cellspacing="0" border="0" class="tborder">
+			<tr class="titlebg">
+				<td colspan="2">', $context['page_title'], '</td>
+			</tr><tr class="catbg">
+				<td colspan="2">', $txt['custom_action_settings'], ':</td>
+			</tr><tr class="windowbg2">
+				<td width="50%">
+					<b>', $txt['custom_action_name'], ':</b>
+				</td>
+				<td width="50%">
+					<input type="text" name="name" value="', $context['action']['name'], '" size="20" maxlength="255" />
+				</td>
+			</tr><tr class="windowbg2">
+				<td width="50%">
+					<b>', $txt['custom_action_url'], ':</b>
+					<div class="smalltext">', $txt['custom_action_url_desc'], '</div>
+				</td>
+				<td width="50%">
+					<input type="text" name="url" value="', $context['action']['url'], '" size="20" maxlength="40" />
+				</td>
+			</tr><tr class="windowbg2">
+				<td width="50%">
+					<b>', $txt['custom_action_type'], ':</b>
+				</td>
+				<td width="50%">
+					<select name="type" id="type" onchange="updateInputBoxes();">
+						<option value="0" ', $context['action']['type'] == 0 ? 'selected="selected"' : '', '>', $txt['custom_action_type_0'], '</option>
+						<option value="1" ', $context['action']['type'] == 1 ? 'selected="selected"' : '', '>', $txt['custom_action_type_1'], '</option>
+						<option value="2" ', $context['action']['type'] == 2 ? 'selected="selected"' : '', '>', $txt['custom_action_type_2'], '</option>
+					</select>
+				</td>
+			</tr><tr class="windowbg2">
+				<td width="50%">
+					<b>', $txt['custom_action_permissions_mode'], ':</b>
+				</td>
+				<td width="50%">
+					<select name="permissions_mode" id="permissions_mode" onchange="updateInputBoxes();">
+						<option value="0" ', $context['action']['permissions_mode'] == 0 ? 'selected="selected"' : '', '>', $txt['custom_action_permissions_mode_0'], '</option>
+						<option value="1" ', $context['action']['permissions_mode'] == 1 ? 'selected="selected"' : '', '>', $txt['custom_action_permissions_mode_1'], '</option>', $context['id_parent'] ? '
+						<option value="2" ' . ($context['action']['permissions_mode'] == 2 ? 'selected="selected"' : '') . '>' . $txt['custom_action_permissions_mode_2'] . '</option>' : '', '
+					</select>
+					<div id="inline_permissions">
+						', theme_inline_permissions('ca_' . ($context['id_action'] ? $context['id_action'] : 'temp')), '
+					</div>
+				</td>
+			</tr>', !$context['id_parent'] ? '<tr class="windowbg2">
+				<td width="50%">
+					<b>' . $txt['custom_action_menu'] . ':</b>
+				</td>
+				<td width="50%">
+					<input type="checkbox" name="menu" ' . ($context['action']['menu'] ? 'checked="checked"' : '') . ' class="check" />
+				</td>
+			</tr>' : '', '<tr class="windowbg2">
+				<td width="50%">
+					<b>', $txt['custom_action_enabled'], ':</b>
+				</td>
+				<td width="50%">
+					<input type="checkbox" name="enabled" ', $context['action']['enabled'] ? 'checked="checked"' : '', ' class="check" />
+				</td>
+			</tr><tr class="catbg">
+				<td colspan="2">', $txt['custom_action_settings_code'], ':</td>
+			</tr><tr class="windowbg2"  valign="top" id="header_box">
+				<td width="50%" id="header_text">
+					<b>', $txt['custom_action_header'], ':</b>
+					<div class="smalltext">', $txt['custom_action_header_desc'], '</div>
+				</td>
+				<td width="50%" id="source_text">
+					<b>', $txt['custom_action_source'], ':</b>
+					<div class="smalltext">', $txt['custom_action_source_desc'], '</div>
+				</td>
+				<td width="50%">
+					<textarea name="header" rows="10" cols="60">', $context['action']['header'], '</textarea>
+				</td>
+			</tr><tr class="windowbg2" valign="top">
+				<td width="50%" id="body_text">
+					<b>', $txt['custom_action_body'], ':</b>
+					<div class="smalltext">', $txt['custom_action_body_desc'], '</div>
+				</td>
+				<td width="50%" id="html_body_text">
+					<b>', $txt['custom_action_body_html'], ':</b>
+					<div class="smalltext">', $txt['custom_action_body_html_desc'], '</div>
+				</td>
+				<td width="50%" id="php_body_text">
+					<b>', $txt['custom_action_body_php'], ':</b>
+					<div class="smalltext">', $txt['custom_action_body_php_desc'], '</div>
+				</td>
+				<td width="50%">
+					<textarea name="body" rows="20" cols="60">', $context['action']['body'], '</textarea>
+				</td>
+			</tr><tr class="titlebg">
+				<td colspan="4" align="center">
+					<input type="submit" name="save" value="', $txt['save'], '" />';
+
+	if ($context['id_action'])
+		echo '
+					<input type="submit" name="delete" value="', $txt['delete'], '" onclick="return confirm(\'', $txt['custom_action_delete_sure'], '\');" />';
+
+	echo '
+				</td>
+			</tr>
+		</table>', $context['id_parent'] ? '
+		<input type="hidden" name="id_parent" value="' . $context['id_parent'] . '" />' : '', '
+		<input type="hidden" name="sc" value="', $context['session_id'], '" />
+	</form>';
+
+	// Get the javascript bits right!
+	echo '
+	<script language="JavaScript" type="text/javascript"><!-- // --><![CDATA[
+		updateInputBoxes();
+	// ]', ']></script>';
+}
+]]></add>
+		</operation>
+
+	</file>
+
+</modification>
