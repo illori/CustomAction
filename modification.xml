@@ -400,7 +400,7 @@ function CustomActionEdit()
 		// Recache.
 		recacheCustomActions();
 
-		redirectexit('action=admin;area=custom_action;sa=action' . ($context['id_parent'] ? ';id_action=' . $context['id_parent'] : ''));
+		redirectexit('action=admin;area=featuresettings;sa=action' . ($context['id_parent'] ? ';id_action=' . $context['id_parent'] : ''));
 	}
 	// Deleting?
 	elseif (isset($_REQUEST['delete']))
@@ -462,7 +462,7 @@ function CustomActionEdit()
 		// We'll need to recache.
 		recacheCustomActions();
 
-		redirectexit('action=admin;area=custom_action;sa=action' . ($context['id_parent'] ? ';id_action=' . $context['id_parent'] : ''));
+		redirectexit('action=admin;area=featuresettings;sa=action' . ($context['id_parent'] ? ';id_action=' . $context['id_parent'] : ''));
 	}
 	// Are we editing or creating a new action?
 	elseif (!empty($context['id_action']))
