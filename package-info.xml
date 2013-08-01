@@ -5,7 +5,7 @@
 	<name>Custom Action Mod</name>
 	<type>modification</type>
 	<version>3.2</version>
-	<install for="2.0 RC4 - 2.0.99">
+	<install for="2.1.*-2.1.99">
 		<readme type="file">license.txt</readme>
 		<database>install.php</database>
 		<require-file name="CustomAction.php" destination="$sourcedir" />
