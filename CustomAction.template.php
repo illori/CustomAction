@@ -18,10 +18,8 @@ function template_view_custom_action()
 				<h3 class="catbg"> ', $context['action']['name'],'</h3>			
 			</div>
 			<div class="windowbg2">
-				<span class="topslice"><span></span></span>
 				<div class="content">', $context['action']['body'], '
 				</div>
-				<span class="botslice"><span></span></span>
 			</div><br />';
 		
 	//	echo $context['action']['body'];
