@@ -675,54 +675,6 @@ $txt['custom_action_menu'] = 'Zeige Men&uuml;button';
 
 	</file>
 
-	<file name="$languagedir/Modifications.german-utf8.php" error="skip">
-
-		<operation>
-			<search position="end"></search>
-			<add><![CDATA[
-$txt['custom_action_shorttitle'] = 'Custom Actions';	
-$txt['core_settings_item_ca'] = 'Custom Actions';
-$txt['core_settings_item_ca_desc'] = 'Mit Custom Actions kannst du Custom Pages erzeugen die eingebunden in deim Theme angezeigt werden.';
-$txt['custom_action_desc'] = 'Auf dieser Seite kannst du deine Custom Pages erstellen und editieren.';
-$txt['custom_action_title'] = 'Custom Actions';
-$txt['custom_action_title_sub'] = 'Sub-Actions für "%1$s"';
-$txt['custom_action_none'] = 'Zur Zeit sind keine Custom Actions vorhanden!';
-$txt['custom_action_none_sub'] = 'Zur Zeit sind keine Sub-Actions für die "%1$s" Action vorhanden!';
-$txt['custom_action_name'] = 'Action Name';
-$txt['custom_action_type'] = 'Typ';
-$txt['custom_action_type_0'] = 'HTML';
-$txt['custom_action_type_1'] = 'BBC';
-$txt['custom_action_type_2'] = 'PHP';
-$txt['custom_action_sub_actions'] = 'Sub-Actions';
-$txt['custom_action_enabled'] = 'aktiviert';
-$txt['custom_action_make_new'] = 'Neue Action';
-$txt['custom_action_make_new_sub'] = 'Neue Sub-Action';
-$txt['custom_action_not_found'] = 'Die angeforderte Action ist nicht vorhanden.';
-$txt['custom_action_invalid_url'] = 'Action URLs dürfen nur Buchstaben, Nummern und Unterstriche enthalten.';
-$txt['custom_action_settings'] = 'Action Einstellungen:';
-$txt['custom_action_url_desc'] = 'Dies darf nur Buchstaben, Nummern und Unterstriche enthalten.';
-$txt['custom_action_permissions_mode'] = 'Permissions Mode';
-$txt['custom_action_permissions_mode_0'] = 'Sichtbar für jeden';
-$txt['custom_action_permissions_mode_1'] = 'Sichtbar für die gewählten Gruppen';
-$txt['custom_action_permissions_mode_2'] = 'Gleiche wie die Eltern Action';
-$txt['custom_action_body'] = 'Body';
-$txt['custom_action_body_html'] = 'HTML Body';
-$txt['custom_action_body_php'] = 'Template Code';
-$txt['custom_action_delete_sure'] = 'Sind sie sicher diese Action zu löschen?';
-$txt['custom_action_header'] = 'HTML Headers';
-$txt['custom_action_source'] = 'Quelldatei Code';
-$txt['custom_action_source_desc'] = 'Dieser Code wird vor dem Anzeigen des Template ausgewertet. Solltest du das nicht verstehen, verwende nur die Template Code Box. Hier soll kein Anzeigecode vorhanden sein.';
-$txt['custom_action_header_desc'] = 'Dieser Code wird in der Kopfzeile angezeigt.';
-$txt['custom_action_body_html_desc'] = 'Dieser Code wird im Body angezeigt..';
-$txt['custom_action_body_php_desc'] = 'Du solltest die gesammte Ausgabe hier sehen.';
-$txt['custom_action_body_desc'] = 'Dies ist der Body für deine Custom Page.';
-$txt['custom_action_url'] = 'Action URL';
-$txt['custom_action_settings_code'] = 'Action Code:';
-$txt['custom_action_menu'] = 'Zeige Menübutton';
-]]></add>
-		</operation>
-
-	</file>
 	
 	<file name="$sourcedir/Subs.php">
 
@@ -810,36 +762,34 @@ function template_edit_custom_action()
 			</div>
 		<div class="windowbg">
 			<div class="content">
-				
-				<dl>
-				<dt>	<b>', $txt['custom_action_name'], ':</b>
-					<input type="text" name="name" value="', $context['action']['name'], '" size="20" maxlength="255" /></dt>
-					<dt><b>', $txt['custom_action_url'], ':</b>
-					<input type="text" name="url" value="', $context['action']['url'], '" size="20" maxlength="40" /><br />
+				<span><b>', $txt['custom_action_name'], ':</b>
+					<input type="text" name="name" value="', $context['action']['name'], '" size="20" maxlength="255" /></span><br /><br />
+					<span><b>', $txt['custom_action_url'], ':</b>
+					<input type="text" name="url" value="', $context['action']['url'], '" size="20" maxlength="40" /><br /><br />
 					<span class="smalltext">', $txt['custom_action_url_desc'], '</span>
-					</dt>
-					<dt><b>', $txt['custom_action_type'], ':</b>
+					</span><br /><br />
+					<span><b>', $txt['custom_action_type'], ':</b>
 					<select name="type" id="type" onchange="updateInputBoxes();">
 						<option value="0" ', $context['action']['type'] == 0 ? 'selected="selected"' : '', '>', $txt['custom_action_type_0'], '</option>
 						<option value="1" ', $context['action']['type'] == 1 ? 'selected="selected"' : '', '>', $txt['custom_action_type_1'], '</option>
 						<option value="2" ', $context['action']['type'] == 2 ? 'selected="selected"' : '', '>', $txt['custom_action_type_2'], '</option>
-					</select></dt>
-					<dt><b>', $txt['custom_action_permissions_mode'], ':</b>
+					</select></span><br /><br />
+					<span><b>', $txt['custom_action_permissions_mode'], ':</b>
 					<select name="permissions_mode" id="permissions_mode" onchange="updateInputBoxes();">
 						<option value="0" ', $context['action']['permissions_mode'] == 0 ? 'selected="selected"' : '', '>', $txt['custom_action_permissions_mode_0'], '</option>
 						<option value="1" ', $context['action']['permissions_mode'] == 1 ? 'selected="selected"' : '', '>', $txt['custom_action_permissions_mode_1'], '</option>', $context['id_parent'] ? '
 						<option value="2" ' . ($context['action']['permissions_mode'] == 2 ? 'selected="selected"' : '') . '>' . $txt['custom_action_permissions_mode_2'] . '</option>' : '', '
-					</select></dt></dl>
+					</select></span><br /><br />
 					<div id="inline_permissions">
 						', theme_inline_permissions('ca_' . ($context['id_action'] ? $context['id_action'] : 'temp')), '
 					</div>
 			', !$context['id_parent'] ? '
-					<dl><dt><b>' . $txt['custom_action_menu'] . ':</b>
+					<span><b>' . $txt['custom_action_menu'] . ':</b>
 					<input type="checkbox" name="menu" ' . ($context['action']['menu'] ? 'checked="checked"' : '') . ' class="check" />
-			' : '', '</dt>
-					<dt><b>', $txt['custom_action_enabled'], ':</b>
-					<input type="checkbox" name="enabled" ', $context['action']['enabled'] ? 'checked="checked"' : '', ' class="check" /></dt>
-					</dl><hr class="hrcolor clear" />
+			' : '', '</span><br /><br />
+					<span><b>', $txt['custom_action_enabled'], ':</b>
+					<input type="checkbox" name="enabled" ', $context['action']['enabled'] ? 'checked="checked"' : '', ' class="check" /></span>
+					<hr class="hrcolor clear" />
 			<b>', $txt['custom_action_settings_code'], '</b>
 			<hr class="hrcolor clear" />
 			<span id="header_box">
