@@ -2,7 +2,7 @@ With the Custom Action Mod you can create custom pages that are wrapped in your 
 
 This modification is licensed under BSD License (http://www.opensource.org/licenses/bsd-license.php)
 
-Copyright (c) 2010, 2011, winrules, Mave, Norv
+Copyright (c) 2010, 2011,2013 winrules, Mave, Norv, Illori
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 
