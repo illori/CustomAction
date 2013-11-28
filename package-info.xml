@@ -9,8 +9,8 @@
 		<readme type="file">license.txt</readme>
         <modification>install.xml</modification>
         <database>installDatabase.php</database>
-        <require-file name="files/CustomAction.php" destination="$sourcedir" />
-        <require-file name="files/CustomAction.template.php" destination="$themedir" />
+        <require-file name="CustomAction.php" destination="$sourcedir" />
+        <require-file name="CustomAction.template.php" destination="$themedir" />
     </install>
     <uninstall for="2.1.*-2.1.99">
         <modification reverse="true">install.xml</modification>
