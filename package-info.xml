@@ -1,32 +1,21 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE package-info SYSTEM "http://www.simplemachines.org/xml/package-info">
 <package-info xmlns="http://www.simplemachines.org/xml/package-info" xmlns:smf="http://www.simplemachines.org/">
-	<id>winrules:CustomAction</id>
-	<name>Custom Action Mod</name>
-	<type>modification</type>
-	<version>3.2</version>
-	<install for="2.1.*-2.1.99">
+    <id>winrules:CustomActions</id>
+    <name>Custom Actions Mod</name>
+    <version>3.2</version>
+    <type>modification</type>
+    <install for="2.1.*-2.1.99">
 		<readme type="file">license.txt</readme>
-		<database>install.php</database>
-		<require-file name="CustomAction.php" destination="$sourcedir" />
-		<require-file name="CustomAction.template.php" destination="$themedir" />
-		<modification type="file">modification.xml</modification>
-	</install>
-	<install>
-		<readme type="inline" parsebbc="true">[color=red]Warning! This mod has not been tested on your version of SMF. Do not proceed if you get errors![/color]</readme>
-		<database>install.php</database>
-		<require-file name="CustomAction.php" destination="$sourcedir" />
-		<require-file name="CustomAction.template.php" destination="$themedir" />
-		<modification type="file">modification.xml</modification>
-	</install>
-	<uninstall>
-		<readme type="inline">This will uninstall the Custom Action Mod.</readme>
-		<database>uninstall.php</database>
-		<remove-file name="$sourcedir/CustomAction.php" />
-		<remove-file name="$themedir/CustomAction.template.php" />
-		<modification type="file" reverse="true">modification.xml</modification>
-	</uninstall>
-	<upgrade>
-		<readme type="inline">Sorry, but there is no upgrade package from your version. Please uninstall the previous version, and install this version. You won't lose any data.</readme>
-	</upgrade>
+        <modification>install.xml</modification>
+        <database>installDatabase.php</database>
+        <require-file name="files/CustomAction.php" destination="$sourcedir" />
+        <require-file name="files/CustomAction.template.php" destination="$themedir" />
+    </install>
+    <uninstall for="2.1.*-2.1.99">
+        <modification reverse="true">install.xml</modification>
+        <database>uninstallDatabase.php</database>
+        <remove-file name="$sourcedir/CustomAction.php" />
+        <remove-file name="$themedir/CustomAction.template.php" />
+    </uninstall>
 </package-info>

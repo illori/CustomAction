@@ -30,4 +30,123 @@ function template_view_custom_action()
 		break;
 	}
 }
+
+function template_show_custom_action()
+{
+	global $context, $txt;
+	template_show_list('custom_actions');
+}
+
+function template_edit_custom_action()
+{
+	global $context, $txt, $scripturl;
+
+	echo '
+	<script language="JavaScript" type="text/javascript"><!-- // -->
+		function updateInputBoxes()
+		{
+			permission_mode = document.getElementById("permissions_mode").value;
+			type = document.getElementById("type").value;
+
+			document.getElementById("inline_permissions").style.display = permission_mode == 1 ? "" : "none";
+			document.getElementById("header_box").style.display = type != 1 ? "" : "none";
+			document.getElementById("header_text").style.display = type == 0 ? "" : "none";
+			document.getElementById("source_text").style.display = type == 2 ? "" : "none";
+			document.getElementById("html_body_text").style.display = type == 0 ? "" : "none";
+			document.getElementById("body_text").style.display = type == 1 ? "" : "none";
+			document.getElementById("php_body_text").style.display = type == 2 ? "" : "none";
+		}
+	// ]', ']></script>';
+
+	echo '
+	
+	<div id="admincenter">
+		<form action="', $scripturl, '?action=ca_edit', $context['id_action'] ? ';id_action=' . $context['id_action'] : '', '" method="post" accept-charset="', $context['character_set'], '">
+			<div class="cat_bar">
+				<h3 class="catbg">
+					',  $txt['custom_action_settings'], '
+				</h3>
+			</div>
+		<div class="windowbg">
+			<div class="content">
+				<span><b>', $txt['custom_action_name'], ':</b>
+					<input type="text" name="name" value="', $context['action']['name'], '" size="20" maxlength="255" /></span><br /><br />
+					<span><b>', $txt['custom_action_url'], ':</b>
+					<input type="text" name="url" value="', $context['action']['url'], '" size="20" maxlength="40" /><br /><br />
+					<span class="smalltext">', $txt['custom_action_url_desc'], '</span>
+					</span><br /><br />
+					<span><b>', $txt['custom_action_type'], ':</b>
+					<select name="type" id="type" onchange="updateInputBoxes();">
+						<option value="0" ', $context['action']['type'] == 0 ? 'selected="selected"' : '', '>', $txt['custom_action_type_0'], '</option>
+						<option value="1" ', $context['action']['type'] == 1 ? 'selected="selected"' : '', '>', $txt['custom_action_type_1'], '</option>
+						<option value="2" ', $context['action']['type'] == 2 ? 'selected="selected"' : '', '>', $txt['custom_action_type_2'], '</option>
+					</select></span><br /><br />
+					<span><b>', $txt['custom_action_permissions_mode'], ':</b>
+					<select name="permissions_mode" disabled id="permissions_mode" onchange="updateInputBoxes();">
+						<option value="0" ', $context['action']['permissions_mode'] == 0 ? 'selected="selected"' : '', '>', $txt['custom_action_permissions_mode_0'], '</option>
+						<option value="1" ', $context['action']['permissions_mode'] == 1 ? 'selected="selected"' : '', '>', $txt['custom_action_permissions_mode_1'], '</option>', $context['id_parent'] ? '
+						<option value="2" ' . ($context['action']['permissions_mode'] == 2 ? 'selected="selected"' : '') . '>' . $txt['custom_action_permissions_mode_2'] . '</option>' : '', '
+					</select></span><br /><br />
+					<div id="inline_permissions">
+						', theme_inline_permissions('ca_' . ($context['id_action'] ? $context['id_action'] : 'temp')), '
+					</div>
+			', !$context['id_parent'] ? '
+					<span><b>' . $txt['custom_action_menu'] . ':</b>
+					<input type="checkbox" name="menu" ' . ($context['action']['menu'] ? 'checked="checked"' : '') . ' class="check" />
+			' : '', '</span><br /><br />
+					<span><b>', $txt['custom_action_enabled'], ':</b>
+					<input type="checkbox" name="enabled" ', $context['action']['enabled'] ? 'checked="checked"' : '', ' class="check" /></span>
+					<hr class="hrcolor clear" />
+			<b>', $txt['custom_action_settings_code'], '</b>
+			<hr class="hrcolor clear" />
+			<span id="header_box">
+				<span id="header_text">
+				<b>', $txt['custom_action_header'], ':</b>
+					<span class="smalltext">', $txt['custom_action_header_desc'], '</span>
+					<textarea name="header" rows="10" cols="60">', $context['action']['header'], '</textarea>
+				</span>
+				<span id="source_text">
+					<b>', $txt['custom_action_source'], ':</b>
+					<span class="smalltext">', $txt['custom_action_source_desc'], '</span>
+					<textarea name="header" rows="10" cols="60">', $context['action']['header'], '</textarea>
+				</span>
+			</span>
+			<span id="body_text">
+					<b>', $txt['custom_action_body'], ':</b>
+					<span class="smalltext">', $txt['custom_action_body_desc'], '</span>
+			</span>
+			<span id="html_body_text">
+					<b>', $txt['custom_action_body_html'], ':</b>
+					<span class="smalltext">', $txt['custom_action_body_html_desc'], '</span>
+			</span>
+			<span id="php_body_text">
+					<b>', $txt['custom_action_body_php'], ':</b>
+					<span class="smalltext">', $txt['custom_action_body_php_desc'], '</span>
+			</span>
+					<textarea name="body" rows="20" cols="60">', $context['action']['body'], '</textarea><br /><br />
+					<input type="hidden" name="', $context['admin-cae_token_var'], '" value="', $context['admin-cae_token'], '" />
+					<input type="hidden" name="', $context['admin-mp_token_var'], '" value="', $context['admin-mp_token'], '" />
+					<input type="submit" name="save" value="', $txt['save'], '" />';
+
+	if ($context['id_action'] && isset($context['action']['can_delete']))
+		echo '
+					<input type="submit" name="delete" value="', $txt['delete'], '" onclick="return confirm(\'', $txt['custom_action_delete_sure'], '\');" />';
+
+	echo '
+				', $context['id_parent'] ? '
+		<input type="hidden" name="id_parent" value="' . $context['id_parent'] . '" />' : '', '
+		<input type="hidden" name="sc" value="', $context['session_id'], '" />
+		<input type="hidden" name="id_author" value="', (!empty($context['user']['id']) ? $context['user']['id'] : -1), '" />
+		</div>
+	</div>
+	</form>
+	</div>';
+
+	// Get the javascript bits right!
+	echo '
+	<script language="JavaScript" type="text/javascript"><!-- // -->
+		updateInputBoxes();
+	// ]', ']></script>';
+}
+
 ?>
