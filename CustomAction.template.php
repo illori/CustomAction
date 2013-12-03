@@ -40,7 +40,7 @@ function template_show_custom_action()
 function template_edit_custom_action()
 {
 	global $context, $txt, $scripturl;
-
+	
 	echo '
 	<script language="JavaScript" type="text/javascript"><!-- // -->
 		function updateInputBoxes()
@@ -82,7 +82,7 @@ function template_edit_custom_action()
 						<option value="2" ', $context['action']['type'] == 2 ? 'selected="selected"' : '', '>', $txt['custom_action_type_2'], '</option>
 					</select></span><br /><br />
 					<span><b>', $txt['custom_action_permissions_mode'], ':</b>
-					<select name="permissions_mode" disabled id="permissions_mode" onchange="updateInputBoxes();">
+					<select name="permissions_mode" ', $context['action']['can_edit_groups'] ? '' : 'disabled', ' id="permissions_mode" onchange="updateInputBoxes();">
 						<option value="0" ', $context['action']['permissions_mode'] == 0 ? 'selected="selected"' : '', '>', $txt['custom_action_permissions_mode_0'], '</option>
 						<option value="1" ', $context['action']['permissions_mode'] == 1 ? 'selected="selected"' : '', '>', $txt['custom_action_permissions_mode_1'], '</option>', $context['id_parent'] ? '
 						<option value="2" ' . ($context['action']['permissions_mode'] == 2 ? 'selected="selected"' : '') . '>' . $txt['custom_action_permissions_mode_2'] . '</option>' : '', '

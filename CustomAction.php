@@ -14,7 +14,7 @@ function ViewCustomAction()
 	
 	// So which custom action is this?
 	$request = $smcFunc['db_query']('', '
-		SELECT id_action, name, permissions_mode, action_type, header, body
+		SELECT id_action, name, permissions_mode, action_type, header, body, id_author
 		FROM {db_prefix}custom_actions
 		WHERE url = {string:url}
 			AND enabled = 1',
@@ -76,7 +76,7 @@ function ViewCustomAction()
 				$allowed = true;
 			else {
 				//Last chance! Are we the author of this action?!
-				if ($context['user']['id'] == $action['id_author'])
+				if ($context['user']['id'] == $context['action']['id_author'])
 					$allowed = true;
 			}
 		}
@@ -316,7 +316,7 @@ function list_getCustomActions($start, $items_per_page, $sort, $parent)
 		//We need to process what we read.
 		if ($row['permissions_mode'] == 0) //everyone can read so let it be :)
 			$list[] = $row;
-		elseif (!empty($context['user']['id'] && ($context['user']['id'] == $row['id_author']))) //am I the author? If so, of course I can read
+		elseif (!empty($context['user']['id']) && ($context['user']['id'] == $row['id_author'])) //am I the author? If so, of course I can read
 			$list[] = $row;
 		elseif (allowedTo('edit_custom_page_any') || allowedTo('remove_custom_page_any')) //if user can edit or remove other people's actions, he must be able to see them!
 			$list[] = $row;
@@ -625,6 +625,7 @@ function CustomActionEdit()
 			'header' => $row['header'],
 			'body' => $row['body'],
 			'can_delete' => $allowed,
+			'can_edit_groups' => (!empty($context['user']['is_admin']) ? 1 : 0),
 		);
 
 		// BBC?
@@ -676,6 +677,7 @@ function CustomActionEdit()
 			'menu' => 0,
 			'header' => '',
 			'body' => '',
+			'can_edit_groups' => (!empty($context['user']['is_admin']) ? 1 : 0),
 		);
 
 		// We'll have to rename these later when we knoe what the action ID will be.

@@ -116,7 +116,7 @@ $txt['permissionname_remove_custom_page_any'] = 'Any Pages';
             <search position="before"><![CDATA[		call_integration_hook('integrate_menu_buttons', array(&$buttons));
 
 ]]></search>
-            <add><![CDATA[		// Any custom action buttons?
+            <add><![CDATA[				// Any custom action buttons?
 		$ca_buttons = unserialize($modSettings['ca_menu_cache']);
 		//Show a main menu button with all actions listed inside
 		$has_actions = false;
@@ -165,7 +165,7 @@ $txt['permissionname_remove_custom_page_any'] = 'Any Pages';
 			$buttons['ca_actions'] = array(
 				'title' => $txt['custom_action_shorttitle'],
 				'href' => $ca_sub_buttons[0]['href'], //We need a link, so be it the first action in the menu...
-				'show' => $has_actions,
+				'show' => true,
 				'sub_buttons' => $ca_sub_buttons,
 				'is_last' => !$context['right_to_left'],
 			);		
