@@ -351,7 +351,7 @@ function list_getCustomActionSize($parent)
 
 function CustomActionEdit()
 {
-	global $context, $txt, $smcFunc, $db_prefix, $sourcedir;
+	global $context, $txt, $smcFunc, $db_prefix, $sourcedir, $user_info;
 	
 	//A guest? Bye, bye!
 	if (empty($context['user']['is_logged']))
@@ -361,7 +361,7 @@ function CustomActionEdit()
 	$context['id_parent'] = isset($_REQUEST['id_parent']) ? (int)$_REQUEST['id_parent'] : 0;
 	//$context[$context['admin_menu_name']]['current_subsection'] = 'action';
 	$context['page_title'] = $txt['custom_action_title'];
-	loadTemplate('CustomAction');
+	loadTemplate('CustomAction');	
 	$context['sub_template'] = 'edit_custom_action';
 	
 	//We need this because of inline permissions...
@@ -404,12 +404,12 @@ function CustomActionEdit()
 			fatal_lang_error('custom_action_invalid_url', false);
 
 		// Inline permissions?
-		if ($_POST['permissions_mode'] == 1)
+		if (isset($_POST['permissions_mode']) && ($_POST['permissions_mode'] == 1))
 		{	
 			save_inline_permissions(array('ca_' . (!empty($context['id_action']) ? $context['id_action'] : 'temp')));
 			$permissions_mode = 1;
 		}
-		else if ($context['id_parent'] && $_POST['permissions_mode'] == 2)
+		else if ($context['id_parent'] && isset($_POST['permissions_mode']) && $_POST['permissions_mode'] == 2)
 			$permissions_mode = 2;
 		else
 			$permissions_mode = 0;
@@ -679,8 +679,10 @@ function CustomActionEdit()
 			'body' => '',
 			'can_edit_groups' => (!empty($context['user']['is_admin']) ? 1 : 0),
 		);
-
-		// We'll have to rename these later when we knoe what the action ID will be.
+		
+		//Ouch :(
+		$user_info['permissions'][] = 'manage_permissions';
+		// We'll have to rename these later when we know what the action ID will be.
 		init_inline_permissions(array('ca_temp'));
 	}
 	createToken('admin-cae');
@@ -708,15 +710,14 @@ function recacheCustomActions()
 	while ($row = $smcFunc['db_fetch_assoc']($request))
 	{
 		$cache[] = $row['url'];
-
-		// On the menu?
-		if ($row['menu'])
-			$menu_cache[] = array(
-				0 => $row['url'],
-				1 => $row['name'],
-				2 => $row['permissions_mode'] == 1 ? 'ca_' . $row['id_action'] : false,
-				3 => $row['id_author'],
-			);
+		//Data for the menu
+		$menu_cache[] = array(
+			0 => $row['url'],
+			1 => $row['name'],
+			2 => $row['permissions_mode'] == 1 ? 'ca_' . $row['id_action'] : false,
+			3 => $row['id_author'],
+			4 => $row['menu'],
+		);
 	}
 
 	$smcFunc['db_free_result']($request);

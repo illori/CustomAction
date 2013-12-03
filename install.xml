@@ -116,13 +116,13 @@ $txt['permissionname_remove_custom_page_any'] = 'Any Pages';
             <search position="before"><![CDATA[		call_integration_hook('integrate_menu_buttons', array(&$buttons));
 
 ]]></search>
-            <add><![CDATA[				// Any custom action buttons?
+            <add><![CDATA[		// Any custom action buttons?
 		$ca_buttons = unserialize($modSettings['ca_menu_cache']);
 		//Show a main menu button with all actions listed inside
 		$has_actions = false;
 		$own_actions = false;
 		foreach ($ca_buttons as $button) {
-			//Run through all actions. If we are allowed to see them, then we 
+			//Run through all actions. If we are allowed to see them, then we should see them
 			if (!empty($button[2]) ? allowedTo($button[2]) : true)
 				$has_actions = true;
 			//Is any of the actions ours?
@@ -151,11 +151,12 @@ $txt['permissionname_remove_custom_page_any'] = 'Any Pages';
 		}
 		if ($has_actions) {
 			foreach ($ca_buttons as $button) {
-				$ca_sub_buttons[] = array(
-					'title' => $button[1],
-					'href' => $scripturl . '?action=' . $button[0],
-					'show' => $button[2] ? allowedTo($button[2]) : true,
-				);
+				if (!empty($button[4]))
+					$ca_sub_buttons[] = array(
+						'title' => $button[1],
+						'href' => $scripturl . '?action=' . $button[0],
+						'show' => $button[2] ? allowedTo($button[2]) : true,
+					);
 			}	
 		}
 		
@@ -170,7 +171,7 @@ $txt['permissionname_remove_custom_page_any'] = 'Any Pages';
 				'is_last' => !$context['right_to_left'],
 			);		
 		}
-		
+
 ]]></add>
         </operation>
     </file>
