@@ -631,6 +631,8 @@ function CustomActionEdit()
 		// BBC?
 		if ($context['action']['type'] == 1)
 			$context['action']['body'] = un_preparsecode($context['action']['body']);
+		//Ouch :(
+		$user_info['permissions'][] = 'manage_permissions';			
 		init_inline_permissions(array('ca_' . $context['id_action']));
 	}
 	else //Definitely, a new action
