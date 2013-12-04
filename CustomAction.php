@@ -235,7 +235,6 @@ function CustomActionList()
 						global $txt;
 
 						return $rowData[\'enabled\'] ? $txt[\'yes\'] : $txt[\'no\'];'),
-					'class' => 'windowbg',
 					'style' => 'width: 8%; text-align: center;',
 				),
 				'sort' => array(
@@ -254,7 +253,6 @@ function CustomActionList()
 							'id_action' => false,
 						),
 					),
-					'class' => 'windowbg',
 					'style' => 'width: 15%; text-align: center;',
 				),
 			),
@@ -262,8 +260,9 @@ function CustomActionList()
 		'additional_rows' => array(
 			array(
 				'position' => 'below_table_data',
-				'value' => '[<a href="' . $scripturl . '?action=ca_edit' . ($parent ? ';id_parent=' . $parent : '') . '">' . $txt['custom_action_make_new' . ($parent ? '_sub' : '')] . '</a>]',
-				'class' => 'titlebg',
+				'value' => '<a href="' . $scripturl . '?action=ca_edit' . ($parent ? ';id_parent=' . $parent : '') . '">' . $txt['custom_action_make_new' . ($parent ? '_sub' : '')] . '</a>',
+				//'value' => '<a class="button_link" href="' . $scripturl . '?action=admin;area=membergroups;sa=add;postgroup">' . $txt['membergroups_add_group'] . '</a>',				
+//				'class' => 'titlebg',
 			),
 		),
 	);
@@ -632,7 +631,7 @@ function CustomActionEdit()
 		if ($context['action']['type'] == 1)
 			$context['action']['body'] = un_preparsecode($context['action']['body']);
 		//Ouch :(
-		$user_info['permissions'][] = 'manage_permissions';			
+		//$user_info['permissions'][] = 'manage_permissions';
 		init_inline_permissions(array('ca_' . $context['id_action']));
 	}
 	else //Definitely, a new action
@@ -683,7 +682,7 @@ function CustomActionEdit()
 		);
 		
 		//Ouch :(
-		$user_info['permissions'][] = 'manage_permissions';
+		//$user_info['permissions'][] = 'manage_permissions';
 		// We'll have to rename these later when we know what the action ID will be.
 		init_inline_permissions(array('ca_temp'));
 	}

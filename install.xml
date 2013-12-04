@@ -46,7 +46,7 @@ $txt['core_settings_item_ca_desc'] = 'With custom actions you can create custom 
 $txt['custom_action_desc'] = 'From this page you can create and modify your own custom pages.';
 $txt['custom_action_title'] = 'Custom Actions';
 $txt['custom_action_title_sub'] = 'Sub-Actions For "%1$s"';
-$txt['custom_action_none'] = 'You have not created any custom actions yet!';
+$txt['custom_action_none'] = 'There are no custom actions to show';
 $txt['custom_action_none_sub'] = 'You have not created any sub-actions for the "%1$s" action yet!';
 $txt['custom_action_name'] = 'Action Name';
 $txt['custom_action_type'] = 'Type';
@@ -55,7 +55,7 @@ $txt['custom_action_type_1'] = 'BBC';
 $txt['custom_action_type_2'] = 'PHP';
 $txt['custom_action_sub_actions'] = 'Sub-Actions';
 $txt['custom_action_enabled'] = 'Enabled';
-$txt['custom_action_my_actions'] = 'My Actions';
+$txt['custom_action_list_actions'] = 'Actions List';
 $txt['custom_action_make_new'] = 'New Action';
 $txt['custom_action_make_new_sub'] = 'New Sub-Action';
 $txt['custom_action_not_found'] = 'The requested action was not found.';
@@ -134,7 +134,7 @@ $txt['permissionname_remove_custom_page_any'] = 'Any Pages';
 		}
 		$ca_sub_buttons = array(); //array for sub-buttons
 		//Do we have any actions of our own? Then we can just list them
-		if ($own_actions) {
+		if ($own_actions || allowedTo('edit_custom_page_any') || allowedTo('remove_custom_page_any')) {
 			$ca_sub_buttons[] = array(
 				'title' => $txt['custom_action_my_actions'],
 				'href' => $scripturl . '?action=ca_list',
