@@ -41,19 +41,20 @@ function template_edit_custom_action()
 {
 	global $context, $txt, $scripturl;
 	
-	echo '
-	<script language="JavaScript" type="text/javascript"><!-- // -->
-		function updateInputBoxesType()
-		{
-			type = document.getElementById("type").value;
-			document.getElementById("header_box").style.display = type != 1 ? "" : "none";
-			document.getElementById("header_text").style.display = type == 0 ? "" : "none";
-			document.getElementById("source_text").style.display = type == 2 ? "" : "none";
-			document.getElementById("html_body_text").style.display = type == 0 ? "" : "none";
-			document.getElementById("body_text").style.display = type == 1 ? "" : "none";
-			document.getElementById("php_body_text").style.display = type == 2 ? "" : "none";
-		}
-	// ]', ']></script>';
+	if ($context['action']['can_choose_type'] == 1)
+		echo '
+			<script language="JavaScript" type="text/javascript"><!-- // -->
+				function updateInputBoxesType()
+				{
+					type = document.getElementById("type").value;
+					document.getElementById("header_box").style.display = type != 0 ? "" : "none";
+					document.getElementById("header_text").style.display = type == 1 ? "" : "none";
+					document.getElementById("source_text").style.display = type == 2 ? "" : "none";
+					document.getElementById("html_body_text").style.display = type == 1 ? "" : "none";
+					document.getElementById("body_text").style.display = type == 0 ? "" : "none";
+					document.getElementById("php_body_text").style.display = type == 2 ? "" : "none";
+				}
+			// ]', ']></script>';
 	if ($context['action']['can_edit_groups'] == 1)
 		echo '
 			<script language="JavaScript" type="text/javascript"><!-- // -->
@@ -79,14 +80,16 @@ function template_edit_custom_action()
 					<span><b>', $txt['custom_action_url'], ':</b>
 						<input type="text" name="url" value="', $context['action']['url'], '" size="20" maxlength="40" /><br /><br />
 						<span class="smalltext">', $txt['custom_action_url_desc'], '</span>
-					</span><br /><br />
-					<span><b>', $txt['custom_action_type'], ':</b>
-						<select name="type" id="type" onchange="updateInputBoxesType();">
-							<option value="0" ', $context['action']['type'] == 0 ? 'selected="selected"' : '', '>', $txt['custom_action_type_0'], '</option>
-							<option value="1" ', $context['action']['type'] == 1 ? 'selected="selected"' : '', '>', $txt['custom_action_type_1'], '</option>
-							<option value="2" ', $context['action']['type'] == 2 ? 'selected="selected"' : '', '>', $txt['custom_action_type_2'], '</option>
-						</select>
 					</span><br /><br />';
+					if ($context['action']['can_choose_type'] == 1)
+						echo '
+							<span><b>', $txt['custom_action_type'], ':</b>
+								<select name="type" id="type" onchange="updateInputBoxesType();">
+									<option value="0" ', $context['action']['type'] == 0 ? 'selected="selected"' : '', '>', $txt['custom_action_type_0'], '</option>
+									<option value="1" ', $context['action']['type'] == 1 ? 'selected="selected"' : '', '>', $txt['custom_action_type_1'], '</option>
+									<option value="2" ', $context['action']['type'] == 2 ? 'selected="selected"' : '', '>', $txt['custom_action_type_2'], '</option>
+								</select>
+							</span><br /><br />';
 					if ($context['action']['can_edit_groups'] == 1)
 						echo '
 							<span><b>', $txt['custom_action_permissions_mode'], ':</b>
@@ -112,31 +115,37 @@ function template_edit_custom_action()
 					<input type="checkbox" name="enabled" ', $context['action']['enabled'] ? 'checked="checked"' : '', ' class="check" /></span>
 					<hr class="hrcolor clear" />
 			<b>', $txt['custom_action_settings_code'], '</b>
-			<hr class="hrcolor clear" />
-			<span id="header_box">
-				<span id="header_text">
-				<b>', $txt['custom_action_header'], ':</b>
-					<span class="smalltext">', $txt['custom_action_header_desc'], '</span>
-					<textarea name="header" rows="10" cols="60">', $context['action']['header'], '</textarea>
-				</span>
-				<span id="source_text">
-					<b>', $txt['custom_action_source'], ':</b>
-					<span class="smalltext">', $txt['custom_action_source_desc'], '</span>
-					<textarea name="header" rows="10" cols="60">', $context['action']['header'], '</textarea>
-				</span>
-			</span>
-			<span id="body_text">
-					<b>', $txt['custom_action_body'], ':</b>
-					<span class="smalltext">', $txt['custom_action_body_desc'], '</span>
-			</span>
-			<span id="html_body_text">
-					<b>', $txt['custom_action_body_html'], ':</b>
-					<span class="smalltext">', $txt['custom_action_body_html_desc'], '</span>
-			</span>
-			<span id="php_body_text">
-					<b>', $txt['custom_action_body_php'], ':</b>
-					<span class="smalltext">', $txt['custom_action_body_php_desc'], '</span>
-			</span>
+			<hr class="hrcolor clear" />';
+			if ($context['action']['can_choose_type'] == 1)
+				echo '
+					<span id="header_box">
+						<span id="header_text">
+						<b>', $txt['custom_action_header'], ':</b>
+							<span class="smalltext">', $txt['custom_action_header_desc'], '</span>
+							<textarea name="header" rows="10" cols="60">', $context['action']['header'], '</textarea>
+						</span>
+						<span id="source_text">
+							<b>', $txt['custom_action_source'], ':</b>
+							<span class="smalltext">', $txt['custom_action_source_desc'], '</span>
+							<textarea name="header" rows="10" cols="60">', $context['action']['header'], '</textarea>
+						</span>
+					</span>';
+			echo '
+				<span id="body_text">
+						<b>', $txt['custom_action_body'], ':</b>
+						<span class="smalltext">', $txt['custom_action_body_desc'], '</span>
+				</span>';
+			if ($context['action']['can_choose_type'] == 1)
+				echo '				
+					<span id="html_body_text">
+							<b>', $txt['custom_action_body_html'], ':</b>
+							<span class="smalltext">', $txt['custom_action_body_html_desc'], '</span>
+					</span>
+					<span id="php_body_text">
+							<b>', $txt['custom_action_body_php'], ':</b>
+							<span class="smalltext">', $txt['custom_action_body_php_desc'], '</span>
+					</span>';
+			echo '			
 					<textarea name="body" rows="20" cols="60">', $context['action']['body'], '</textarea><br /><br />
 					<input type="hidden" name="', $context['admin-cae_token_var'], '" value="', $context['admin-cae_token'], '" />
 					<input type="hidden" name="', $context['admin-mp_token_var'], '" value="', $context['admin-mp_token'], '" />
@@ -157,10 +166,11 @@ function template_edit_custom_action()
 	</div>';
 
 	// Get the javascript bits right!
+	if ($context['action']['can_choose_type'] == 1)
 	echo '
-	<script language="JavaScript" type="text/javascript"><!-- // -->
-		updateInputBoxesType();
-	// ]', ']></script>';
+		<script language="JavaScript" type="text/javascript"><!-- // -->
+			updateInputBoxesType();
+		// ]', ']></script>';
 	if ($context['action']['can_edit_groups'] == 1)
 		echo '	
 			<script language="JavaScript" type="text/javascript"><!-- // -->

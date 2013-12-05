@@ -50,8 +50,8 @@ $txt['custom_action_none'] = 'There are no custom actions to show';
 $txt['custom_action_none_sub'] = 'You have not created any sub-actions for the "%1$s" action yet!';
 $txt['custom_action_name'] = 'Action Name';
 $txt['custom_action_type'] = 'Type';
-$txt['custom_action_type_0'] = 'HTML';
-$txt['custom_action_type_1'] = 'BBC';
+$txt['custom_action_type_0'] = 'BBC';
+$txt['custom_action_type_1'] = 'HTML';
 $txt['custom_action_type_2'] = 'PHP';
 $txt['custom_action_sub_actions'] = 'Sub-Actions';
 $txt['custom_action_enabled'] = 'Enabled';
@@ -136,7 +136,7 @@ $txt['permissionname_remove_custom_page_any'] = 'Any Pages';
 		//Do we have any actions of our own? Then we can just list them
 		if ($own_actions || allowedTo('edit_custom_page_any') || allowedTo('remove_custom_page_any')) {
 			$ca_sub_buttons[] = array(
-				'title' => $txt['custom_action_my_actions'],
+				'title' => $txt['custom_action_list_actions'],
 				'href' => $scripturl . '?action=ca_list',
 				'show' => true, //No need to check here
 			);

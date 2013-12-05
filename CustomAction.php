@@ -89,13 +89,14 @@ function ViewCustomAction()
 
 	switch ($context['action']['action_type'])
 	{
-	// Any HTML headers?
-	case 0:
-		$context['html_headers'] .= $context['action']['header'];
-		break;
+
 	// Do we need to parse any BBC?
-	case 1:
+	case 0:
 		$context['action']['body'] = parse_bbc($context['action']['body']);
+		break;
+	case 1:
+	// Any HTML headers?
+		$context['html_headers'] .= $context['action']['header'];
 		break;
 	// We have some more stuff to do for PHP actions.
 	case 2:
@@ -154,7 +155,7 @@ function CustomActionList()
 
 	// Load up our list.
 	require_once($sourcedir . '/Subs-List.php');
-
+	
 	$listOptions = array(
 		'id' => 'custom_actions',
 		'title' => $parent ? sprintf($txt['custom_action_title_sub'], $parent_name) : $txt['custom_action_title'],
@@ -213,6 +214,7 @@ function CustomActionList()
 			'sub_actions' => array(
 				'header' => array(
 					'value' => $txt['custom_action_sub_actions'],
+					'class' => 'centercol',
 				),
 				'data' => array(
 					'function' => create_function('$rowData', '
@@ -220,6 +222,7 @@ function CustomActionList()
 
 						return \'<a href="\' . $scripturl . \'?action=ca_list;id_action=\' . $rowData[\'id_action\'] . \'">\' . $rowData[\'sub_actions\'] . \'</a>\';'),
 					'style' => 'width: 12%; text-align: center;',
+					'class' => 'centercol',
 				),
 				'sort' => array(
 					'default' => 'COUNT(sa.id_action)',
@@ -245,6 +248,7 @@ function CustomActionList()
 			'modify' => array(
 				'header' => array(
 					'value' => $txt['modify'],
+					'class' => 'centercol',
 				),
 				'data' => array(
 					'sprintf' => array(
@@ -253,7 +257,8 @@ function CustomActionList()
 							'id_action' => false,
 						),
 					),
-					'style' => 'width: 15%; text-align: center;',
+					//'style' => 'width: 15%; text-align: center;',
+					'class' => 'centercol',
 				),
 			),
 		),
@@ -277,7 +282,8 @@ function CustomActionList()
 function list_getCustomActions($start, $items_per_page, $sort, $parent)
 {
 	global $smcFunc, $db_prefix, $context;
-	
+
+	//Initialize our list array
 	$list = array();
 	
 	//A guest? No list...
@@ -312,16 +318,22 @@ function list_getCustomActions($start, $items_per_page, $sort, $parent)
 		);
 	while ($row = $smcFunc['db_fetch_assoc']($request))
 	{
-		//We need to process what we read.
-		if ($row['permissions_mode'] == 0) //everyone can read so let it be :)
+		//We need to process what we read. Carefully now. New conditions can be added as desired.
+		//Bruce all mighty admin is included here
+		if (allowedTo('edit_custom_page_any') || allowedTo('remove_custom_page_any'))
 			$list[] = $row;
-		elseif (!empty($context['user']['id']) && ($context['user']['id'] == $row['id_author'])) //am I the author? If so, of course I can read
+		//am I the author? If so, of course I can read
+		elseif (!empty($context['user']['id']) && ($context['user']['id'] == $row['id_author']))
 			$list[] = $row;
-		elseif (allowedTo('edit_custom_page_any') || allowedTo('remove_custom_page_any')) //if user can edit or remove other people's actions, he must be able to see them!
+		//everyone can read and it is enabled so let it be :)
+		elseif (($row['permissions_mode'] == 0) && ($row['enabled'] == 1))
 			$list[] = $row;
 	}
 	$smcFunc['db_free_result']($request);
-
+// echo '<pre>';
+// print_r($list);
+// echo '</pre>';
+// exit;
 	return $list;
 }
 
@@ -329,7 +341,7 @@ function list_getCustomActionSize($parent)
 {
 	global $smcFunc, $db_prefix, $context;
 
-	//A guest? No list...
+	// A guest? No list...
 	if (empty($context['user']['is_logged']))
 		return 0;
 
@@ -415,10 +427,11 @@ function CustomActionEdit()
 
 		// Is the field enabled?
 		$enabled = !empty($_POST['enabled']) ? 1 : 0;
+		$actiontype = !empty($_POST['type']) ? (int)$_POST['type'] : 0;
 
 		// What about the type?
-		if (in_array($_POST['type'], array(0, 1, 2)))
-			$type = $_POST['type'];
+		if (in_array($actiontype, array(0, 1, 2)))
+			$type = $actiontype;
 		else
 			$type = 0;
 
@@ -426,13 +439,13 @@ function CustomActionEdit()
 		$menu = !empty($_POST['menu']) && !$context['id_parent'] ? 1 : 0;
 
 		// Clean the body and headers.
-		$header = $_POST['header'];
-		if ($type == 1)
+		$header = !empty($_POST['header']) ? $_POST['header'] : '';
+		//BBC needs to be parsed
+		if ($type == 0)
 		{
 			$body = !empty($_POST['body']) ? $_POST['body'] : '';
 			$body = $smcFunc['htmlspecialchars']($body);
 			preparsecode($body);
-
 			// No headers for us!
 			$header = '';
 		}
@@ -440,7 +453,6 @@ function CustomActionEdit()
 			$body = $_POST['body'];
 
 		$name = $_POST['name'];
-		
 		$author = $context['user']['id'];
 
 		// Update the database.
@@ -625,10 +637,11 @@ function CustomActionEdit()
 			'body' => $row['body'],
 			'can_delete' => $allowed,
 			'can_edit_groups' => (!empty($context['user']['is_admin']) ? 1 : 0),
+			'can_choose_type' => (!empty($context['user']['is_admin']) ? 1 : 0),
 		);
 
 		// BBC?
-		if ($context['action']['type'] == 1)
+		if ($context['action']['type'] == 0)
 			$context['action']['body'] = un_preparsecode($context['action']['body']);
 		//Ouch :(
 		//$user_info['permissions'][] = 'manage_permissions';
@@ -679,6 +692,7 @@ function CustomActionEdit()
 			'header' => '',
 			'body' => '',
 			'can_edit_groups' => (!empty($context['user']['is_admin']) ? 1 : 0),
+			'can_choose_type' => (!empty($context['user']['is_admin']) ? 1 : 0),			
 		);
 		
 		//Ouch :(
