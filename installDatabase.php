@@ -107,6 +107,12 @@ $columns = array(
 		'default' => '',
 		'null' => false,
 	),
+	array(
+		'name' => 'id_author',
+		'type' => 'int',
+		'default' => '0',
+		'null' => false,
+	),
 );
 
 $indexes = array(

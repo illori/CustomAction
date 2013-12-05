@@ -43,5 +43,29 @@ $smcFunc['db_query']('', '
 		'ca_prefix' => 'ca_',
 	)
 );
+$smcFunc['db_query']('', '
+	DELETE FROM {db_prefix}permissions
+	WHERE SUBSTRING(permission, 1, 14) = {string:ca_prefix}',
+	array(
+		'ca_prefix' => 'create_custom_',
+	)
+);
+$smcFunc['db_query']('', '
+	DELETE FROM {db_prefix}permissions
+	WHERE SUBSTRING(permission, 1, 12) = {string:ca_prefix}',
+	array(
+		'ca_prefix' => 'edit_custom_',
+	)
+);
+$smcFunc['db_query']('', '
+	DELETE FROM {db_prefix}permissions
+	WHERE SUBSTRING(permission, 1, 14) = {string:ca_prefix}',
+	array(
+		'ca_prefix' => 'remove_custom_',
+	)
+);
+
+
+
 
 ?>
